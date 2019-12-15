@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <input type='file' id='contactListIn'>
+
+        <script>
+            var categories = {
+
+            }
+
+            /*These are sorted to be relocated through the DOM. they are independent from categories.
+            Syntax: Zachary Mitchell = "zm0". If there's another contact with the same first and last name letters, the number will be incremented (e.g zm1)
+            There will also be an integer system to keep track of instances of names, for example, let's say there's a key of zm. 
+                this will be an integer that will say what the next index for that combination will be.
+            */
+            var contactObjects = {
+
+            }
+
+            var newContacts = 0;
+            var contactList = [];
+            contactListIn.onchange = function(){
+                newContacts = 0;
+                for(var i of contactListIn.files) i.text().then(e=>{
+                    newContacts++;
+                    if(newContacts == contactListIn.files.length){
+                        //Start parsing!
+                    }
+                });
+            }
+
+            //Parse the custom file format for this program, or a vcf. Only need to grab the neccessary values.
+            function parseContactFile(strIn){
+
+            }
+
+            //Both of these objects have DOM elements tied to them:
+            //Contact object - contains basic information including name and phone.
+            function contact(fname='',lname='',number=''){
+
+                //Initialize dom elements:
+                this.inDom = document.createElement('div');
+                this.inDom.innerHTML='<input placeholder="First Name" class="fname"><input placeholder="Last Name" class="lname"><input placeholder="Phone Number" class="number"> <br>';
+                this.outDom = document.createElement('div');
+
+                //Set one of the primary avaiable variables: first name, last name, and number
+                this.setAttribute = function (target,value){
+                    //If value is something else, convert to string:
+                    value = ''+value;
+                    var allowedAttributes = ['fname','lname','number'];
+                    if(allowedAttributes.indexOf(target) > -1){
+                        var finalVal = '';
+                        //Since there's allot of things to filter out, parsing will be manual here:
+                        for(var i = 0;i<value.length;i++){
+                            //If this is a phone number, take out anything that's not a number
+                            if(target!='number' || target == 'number' && !isNaN(value[i]))
+                                if( (i>0 && value[i]!=',') || (i == 0 && '|),'.indexOf(value[i]) ==-1)) //Remove custom file-type syntax if that slips in.
+                                    finalVal+=value[i];
+                        }
+
+                        //set internal value and dom elements:
+                        this[target] = finalVal;
+                        this.inDom.getElementsByClassName(target)[0].value = finalVal;
+
+                        return finalVal;
+                    }
+                    else console.error('The function can only accept the following: '+allowedAttributes.join(', ')+'.');
+                }
+
+                //Core Attributes (Please do not set directly)
+                this.setAttribute('fname',fname);
+                this.setAttribute('lname',lname);
+                this.setAttribute('number',number);
+
+                // console.log(fname,lname,number);
+                //Permanent ID of this contact. Will not change unless the page is refreshed / contact is deleted.
+                this.contactObjId = this.fname[0] + '' + this.lname[0];
+                console.log(this.contactObjId)
+                //Define integer index if it doesn't exist:
+                if(contactObjects[this.contactObjId] === undefined) contactObjects[this.contactObjId] = 0;
+                //Increment integer index by one:
+                contactObjects[this.contactObjId]++;
+                this.contactObjId+=contactObjects[this.contactObjId]-1;
+                //From here on out we're not referencing the integer index, we're referencing this object.
+                contactObjects[this.contactObjId] = this;
+
+                //(inDom) Add event listeners and contact object ID:
+                for(var i of this.inDom.getElementsByTagName('input')){
+                    i.dataset.contactObjId = this.contactObjId;
+                    i.onchange = function(){
+                        contactObjects[this.dataset.contactObjId].setAttribute(this.className,this.value);
+                    }
+                }
+            }
+
+            //Category - contains information such as section color, font, and current contacts.
+            function category(name='',font='',color='#000000'){
+                this.inDom = document.createElement('div');
+                //the div tag on the end of this next variable is where the list of contacts will go (or at least their associated DOM element.)
+                this.inDom.innerHTML = '<input class="catName"><input type="color" class="catColor"><select class="catFont"></select><div class="catContacts"></div>';
+                this.outDom = document.createElement('div');
+                this.setAttribute = function(target,value){
+                    if(['name','color'].indexOf(target) > 0){
+                        value = ''+value;
+                        //ommit anything that could trip the custom file format:
+                        var finalVal = '';
+                        for(var i = 0;i<value.length;i++)
+                            //Go through the parse dance again
+                            if( (i>0 && value[i]!=',') || (i == 0 && '|),'.indexOf(value[i]) ==-1))
+                                finalVal+=value[i];
+
+                        this[target] = finalVal;
+                        this.inDom.getElementsByClassName('cat'+target[0].toUpperCase()+target.substring(1))[0].value=finalVal;
+                    }
+                    //This is a completely different process:
+                    else if(target == 'font'){
+
+                    }
+                    else console.error('The function only accepts the following: name, color, font.');
+                }
+
+                //Sort contacts by first name or last name, then re-insert elements into the system:
+                //If there's a huge amount of contacts in the list, you can optionally not sort at all and just add ones not in the DOM yet.
+                this.refreshContacts = function(sort = true,firstLast = true){
+                    var resultInElement = this.inDom.getElementsByClassName('catContacts');
+                    if(sort){
+                        resultInElement.innerHTML = "";
+                        //sort by first name or last name:
+                        var sortBy = (firstLast?'f':'l')+'name';
+                        for(var i = 0;i<this.contacts.length;i++){
+                            for(var j=0;j<this.contacts.length;j++){
+                                if(this.contacts[j][sortBy] > this.contacts[i][sortBy]){
+                                    var temp = this.contacts[i];
+                                    this.contacts[i] = this.contacts[j];
+                                    this.contacts[j] = temp;
+                                }
+                            }
+                        }
+
+                        //print elements to the respective dom elements:
+                        //Input dom
+                        for(var i of this.contacts) resultInElement.appendChild(i.inDom);
+
+                        //Output dom
+
+                    }
+                    else{
+                        //Simply compare the size differences and add the most recent elements to the dom:
+                        if(this.contacts.length > resultInElement.children.length){
+                            var lengthCount = 0;
+                            for(var i = 0;resultInElement.children.length < this.contacts.length;i++)
+                                resultInElement.appendChild(this.contacts[resultInElement.children.length+i].inDom);                                
+                        }
+                    }
+                }
+
+                this.setAttribute('name',name);
+                this.setAttribute('font',font);
+                this.setAttribute('color',color);
+                this.contacts = [];
+
+                //The id system of categories will be a little different.
+                
+            }
+        </script>
+    </body>
+</html>

@@ -1,0 +1,4 @@
+BEGIN:VCARD
+N:Bar;Foo;;;
+TEL;type=IPHONE;type=CELL;type=VOICE;type=pref:(123) 456-7890
+END:VCARD
