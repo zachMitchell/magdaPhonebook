@@ -25,13 +25,41 @@
                     newContacts++;
                     if(newContacts == contactListIn.files.length){
                         //Start parsing!
+                        console.log(e);
+                        parseContactFile(e);
                     }
                 });
             }
 
             //Parse the custom file format for this program, or a vcf. Only need to grab the neccessary values.
             function parseContactFile(strIn){
+                //Default to blank category until we find a new category to use:
+                if(categories[''] == undefined) new category(); //Yes, this is referencable :o
+                var blankCategory = categories[0];
 
+                //Figure out if this is a vcf:
+                var fname = lname = number = ''; //heheheheheh
+                if(strIn.indexOf('BEGIN:VCARD') > -1){
+                    //parse vcf
+
+                }
+                else{
+                    //parse custom file format
+                    var currentCategory = new category();
+                    for(var i of strIn.split('\n')){
+                        if(i[0] == ')'){
+                            //Sort contacts and create a new category:
+                            currentCategory.refreshContacts();
+
+                            //Grab information:
+                            var info = i.substring(1).split(',');
+                            //Make the new category
+                            currentCategory = new category(...info);
+                        }
+                        //Assume a contact otherwise:
+                        else currentCategory.contacts.push(new contact(...(i.split(',')) ));
+                    }
+                }
             }
 
             //Both of these objects have DOM elements tied to them:
@@ -97,10 +125,10 @@
             function category(name='',font='',color='#000000'){
                 this.inDom = document.createElement('div');
                 //the div tag on the end of this next variable is where the list of contacts will go (or at least their associated DOM element.)
-                this.inDom.innerHTML = '<input class="catName"><input type="color" class="catColor"><select class="catFont"></select><div class="catContacts"></div>';
+                this.inDom.innerHTML = '<span class="catContainer"><input class="catName"><input type="color" class="catColor"><select class="catFont"></select></span><div class="catContacts"></div>';
                 this.outDom = document.createElement('div');
                 this.setAttribute = function(target,value){
-                    if(['name','color'].indexOf(target) > 0){
+                    if(['name','color'].indexOf(target) > -1){
                         value = ''+value;
                         //ommit anything that could trip the custom file format:
                         var finalVal = '';
@@ -122,7 +150,7 @@
                 //Sort contacts by first name or last name, then re-insert elements into the system:
                 //If there's a huge amount of contacts in the list, you can optionally not sort at all and just add ones not in the DOM yet.
                 this.refreshContacts = function(sort = true,firstLast = true){
-                    var resultInElement = this.inDom.getElementsByClassName('catContacts');
+                    var resultInElement = this.inDom.getElementsByClassName('catContacts')[0];
                     if(sort){
                         resultInElement.innerHTML = "";
                         //sort by first name or last name:
@@ -158,9 +186,17 @@
                 this.setAttribute('font',font);
                 this.setAttribute('color',color);
                 this.contacts = [];
+                //The id system of categories will be a little different. (This needs to be set before name is set...)
+                this.catId = this.name[0];
+                if(categories[this.catId] == undefined) categories[this.catId] = 0;
+                //Indcrement the base id
+                categories[this.catId]++;
+                this.catId+=categories[this.catId]-1;
+                //Referencing this object now (...yes it's confusing XP):
+                categories[this.catId] = this;
 
-                //The id system of categories will be a little different.
-                
+                //Insert this new id into the required elements:
+                for(var i of this.inDom.getElementsByClassName('catContainer')[0].children) i.dataset.catId = this.catId;
             }
         </script>
     </body>

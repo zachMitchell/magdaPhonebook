@@ -1,8 +1,6 @@
-)Arial
-|category1
+)category1,Arial
 Zachary,Mitchell,1234567890
 Sam,Sample,0987654321
-)Times New Roman,#00FF00
-|category2
+)category2,Times New Roman,#00FF00
 Sarah,Sample,1234567
 asdf,fdsa,7654321
