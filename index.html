@@ -3,6 +3,9 @@
     <body>
         <input type='file' id='contactListIn'>
 
+        <div id='editorField'></div>
+        <div id="previewField"></div>
+
         <script>
             var categories = {
 
@@ -18,15 +21,28 @@
             }
 
             var newContacts = 0;
+            var loadedContacts = 0;
             var contactList = [];
             contactListIn.onchange = function(){
                 newContacts = 0;
+                loadedContacts = 0;
                 for(var i of contactListIn.files) i.text().then(e=>{
                     newContacts++;
                     if(newContacts == contactListIn.files.length){
                         //Start parsing!
-                        console.log(e);
+                        // console.log(e);
                         parseContactFile(e);
+                        loadedContacts++;
+                        if(loadedContacts == newContacts){
+                            //Everything loaded, let's display it!
+                            for(var i in categories){
+                                if(typeof categories[i] == 'object'){
+                                    console.log(categories[i],i);
+                                    editorField.appendChild(categories[i].inDom);
+                                    previewField.appendChild(categories[i].outDom);
+                                }
+                            }
+                        }
                     }
                 });
             }
@@ -57,8 +73,12 @@
                             currentCategory = new category(...info);
                         }
                         //Assume a contact otherwise:
-                        else currentCategory.contacts.push(new contact(...(i.split(',')) ));
+                        else{
+                            currentCategory.contacts.push(new contact(...(i.split(',')) ));
+                            console.log(currentCategory.contacts[currentCategory.contacts.length-1]);
+                        }
                     }
+                    currentCategory.refreshContacts();
                 }
             }
 
@@ -70,6 +90,7 @@
                 this.inDom = document.createElement('div');
                 this.inDom.innerHTML='<input placeholder="First Name" class="fname"><input placeholder="Last Name" class="lname"><input placeholder="Phone Number" class="number"> <br>';
                 this.outDom = document.createElement('div');
+                this.outDom.innerHTML = '<h2><span class="ofname"></span> <span class="olname"></span></h2><h3 class="onumber"></h3><br>';
 
                 //Set one of the primary avaiable variables: first name, last name, and number
                 this.setAttribute = function (target,value){
@@ -89,6 +110,21 @@
                         //set internal value and dom elements:
                         this[target] = finalVal;
                         this.inDom.getElementsByClassName(target)[0].value = finalVal;
+                        if(target == 'number'){
+                            //Numbers will work differently then other values. In the element, the value will be stored alongside a formatted one.
+                            var outSpan = this.outDom.getElementsByClassName('o'+target)[0]
+
+                            if(finalVal.length > 10)
+                                outSpan.innerHTML = "("+finalVal.substring(0,3)+ ") " + finalVal.substring(3);
+                            else if(finalVal.length == 10)
+                                outSpan.innerHTML = "("+finalVal.substring(0,3)+ ") " + finalVal.substring(3,6) + " - " + finalVal.substring(6);
+                            else if (finalVal.length == 7)
+                                outSpan.innerHTML = finalVal.substring(0,3) + " - " + finalVal.substring(3);
+                            else outSpan.innerHTML = finalVal;
+
+                            outSpan.dataset.value = finalVal;
+                        }
+                        else this.outDom.getElementsByClassName('o'+target)[0].innerHTML = finalVal;
 
                         return finalVal;
                     }
@@ -125,10 +161,11 @@
             function category(name='',font='',color='#000000'){
                 this.inDom = document.createElement('div');
                 //the div tag on the end of this next variable is where the list of contacts will go (or at least their associated DOM element.)
-                this.inDom.innerHTML = '<span class="catContainer"><input class="catName"><input type="color" class="catColor"><select class="catFont"></select></span><div class="catContacts"></div>';
+                this.inDom.innerHTML = '<span class="catContainer"><input class="catName"><input type="color" class="catColor"><input class="catFont"></input></span><div class="catContacts"></div>';
                 this.outDom = document.createElement('div');
+                this.outDom.innerHTML = '<h1 class="catHeader"></h1><div class="outCatContacts"></div>';
                 this.setAttribute = function(target,value){
-                    if(['name','color'].indexOf(target) > -1){
+                    if(['name','color','font'].indexOf(target) > -1){
                         value = ''+value;
                         //ommit anything that could trip the custom file format:
                         var finalVal = '';
@@ -139,10 +176,14 @@
 
                         this[target] = finalVal;
                         this.inDom.getElementsByClassName('cat'+target[0].toUpperCase()+target.substring(1))[0].value=finalVal;
-                    }
-                    //This is a completely different process:
-                    else if(target == 'font'){
-
+                        //Output:
+                        switch(target){
+                            case 'name': this.outDom.getElementsByClassName('catHeader')[0].innerHTML = finalVal;
+                            break;
+                            case 'color': this.outDom.style.color = finalVal;
+                            break;
+                            case 'font': this.outDom.style.fontFamily = finalVal;
+                        }
                     }
                     else console.error('The function only accepts the following: name, color, font.');
                 }
@@ -151,8 +192,10 @@
                 //If there's a huge amount of contacts in the list, you can optionally not sort at all and just add ones not in the DOM yet.
                 this.refreshContacts = function(sort = true,firstLast = true){
                     var resultInElement = this.inDom.getElementsByClassName('catContacts')[0];
+                    var resultOutElement = this.outDom.getElementsByClassName('outCatContacts')[0];
                     if(sort){
                         resultInElement.innerHTML = "";
+                        resultOutElement.innerHTML = "";
                         //sort by first name or last name:
                         var sortBy = (firstLast?'f':'l')+'name';
                         for(var i = 0;i<this.contacts.length;i++){
@@ -166,10 +209,13 @@
                         }
 
                         //print elements to the respective dom elements:
-                        //Input dom
-                        for(var i of this.contacts) resultInElement.appendChild(i.inDom);
+                        for(var i of this.contacts){
+                            //Input dom
+                            resultInElement.appendChild(i.inDom);
+                            //Output dom
+                            resultOutElement.appendChild(i.outDom);
+                        }
 
-                        //Output dom
 
                     }
                     else{
@@ -195,8 +241,13 @@
                 //Referencing this object now (...yes it's confusing XP):
                 categories[this.catId] = this;
 
-                //Insert this new id into the required elements:
-                for(var i of this.inDom.getElementsByClassName('catContainer')[0].children) i.dataset.catId = this.catId;
+                //Insert this new id into the required elements (Also add event listeners):
+                for(var i of this.inDom.getElementsByClassName('catContainer')[0].children){
+                    i.dataset.catId = this.catId;
+                    i.onchange = function(){
+                        categories[this.dataset.catId].setAttribute(this.className.substring(3).toLowerCase(),this.value)
+                    }
+                }
             }
         </script>
     </body>
