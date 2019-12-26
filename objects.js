@@ -125,7 +125,7 @@ function category(name='',font='',color='#000000'){
     this.inDom = document.createElement('div');
     this.inDom.className = 'categoryDiv';
     //the div tag on the end of this next variable is where the list of contacts will go (or at least their associated DOM element.)
-    this.inDom.innerHTML = '<span class="catContainer"><input class="catName"><input type="color" class="catColor"><input class="catFont"></input></span><div class="catContacts"></div><button class="newContactBtn" onclick="this.parentElement.getElementsByClassName(\'addContactInterface\')[0].style.display=\'\'">Add new contact</button>';
+    this.inDom.innerHTML = '<span class="catContainer"><input class="catName" placeholder="Category name"><input type="color" class="catColor" placeholder="Text color"><input placeholder="Font" class="catFont"></input></span><div class="catContacts"></div><button class="newContactBtn" onclick="this.parentElement.getElementsByClassName(\'addContactInterface\')[0].style.display=\'\'">Add new contact</button>';
     this.outDom = document.createElement('div');
     this.outDom.innerHTML = '<h1 class="catHeader"></h1><div class="outCatContacts"></div>';
     this.setAttribute = function(target,value){
@@ -220,7 +220,7 @@ function category(name='',font='',color='#000000'){
     //"Add new contact" system. When this section is filled out, it hides, then a function is run here to create the contact.
     var addNewContact = document.createElement('div');
     addNewContact.className='addContactInterface';
-    addNewContact.innerHTML = '<input class="newCFName" placeholder="First Name"/><input class="newCLName" placeholder="Last Name"/><input class="newCNumber"/><button onclick="categories[\''+this.catId+'\'].appendNewContact(this.parentElement)">Add!</button><button onclick="categories[\''+this.catId+'\'].clearAndHideAddInterface(this.parentElement)">Cancel</button>';
+    addNewContact.innerHTML = '<input class="newCFName" placeholder="First Name"/><input class="newCLName" placeholder="Last Name"/><input class="newCNumber" placeholder="Phone Number"/><button onclick="categories[\''+this.catId+'\'].appendNewContact(this.parentElement)">Add!</button><button onclick="categories[\''+this.catId+'\'].clearAndHideAddInterface(this.parentElement)">Cancel</button>';
     addNewContact.style.display = 'none';
     this.inDom.appendChild(addNewContact);
 
