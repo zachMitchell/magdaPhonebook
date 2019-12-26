@@ -4,3 +4,5 @@ Sam,Sample,0987654321
 )category2,Times New Roman,#00FF00
 Sarah,Sample,1234567
 asdf,fdsa,7654321
+)category1,Monospace
+dupeCat,Sample,1111111111
