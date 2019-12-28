@@ -125,7 +125,7 @@ function category(name='',font='',color='#000000'){
     this.inDom = document.createElement('div');
     this.inDom.className = 'categoryDiv';
     //the div tag on the end of this next variable is where the list of contacts will go (or at least their associated DOM element.)
-    this.inDom.innerHTML = '<span class="catContainer"><input class="catName" placeholder="Category name"><input type="color" class="catColor" placeholder="Text color"><input placeholder="Font" class="catFont"></input></span><div class="catContacts"></div><button class="newContactBtn" onclick="this.parentElement.getElementsByClassName(\'addContactInterface\')[0].style.display=\'\'">Add new contact</button>';
+    this.inDom.innerHTML = '<span class="catContainer"><input class="catName" placeholder="Category name"><input placeholder="Font" class="catFont"></input><input type="color" class="catColor" placeholder="Text color"></span><button class="delCatBtn">X</button><div class="catContacts"></div><button class="newContactBtn" onclick="this.parentElement.getElementsByClassName(\'addContactInterface\')[0].style.display=\'\'">Add new contact</button>';
     this.outDom = document.createElement('div');
     this.outDom.innerHTML = '<h1 class="catHeader"></h1><div class="outCatContacts"></div>';
     this.setAttribute = function(target,value){
@@ -163,26 +163,15 @@ function category(name='',font='',color='#000000'){
             var sortBy = (firstLast?'f':'l')+'name';
             //Rid the array of anything other then objects (basically make a new array):
             var popIndex = 0;
-            this.contacts = this.contacts.filter(e=>typeof e == 'object');
-    
-            for(var i = 0;i<this.contacts.length;i++){
-                for(var j=0;j<this.contacts.length;j++){
-                    if(this.contacts[j][sortBy] > this.contacts[i][sortBy]){
-                        var temp = this.contacts[i];
-                        this.contacts[i] = this.contacts[j];
-                        this.contacts[j] = temp;
-                    }
-                }
-            }
-    
+            this.contacts = this.contacts.filter(e=>typeof e == 'object').sort((e,f)=>e[sortBy] > f[sortBy]?1:-1);
+
             //print elements to the respective dom elements:
             for(var i of this.contacts){
                 //Input dom
                 resultInElement.appendChild(i.inDom);
                 //Output dom
                 resultOutElement.appendChild(i.outDom);
-            }
-    
+            }    
     
         }
         else{
@@ -247,4 +236,26 @@ function category(name='',font='',color='#000000'){
             this.clearAndHideAddInterface(iSrc);
         }
     }
+
+    this.inDom.getElementsByClassName('delCatBtn')[0].onclick = function(){
+        var targetCat = categories[this.parentElement.dataset.catId];
+        if(confirm('Delete '+targetCat.name + '?')){
+            var keepContacts = confirm('Move contacts to the blank category?');
+            if(keepContacts){
+                //Find the blank category; if it doesn't exist make it:
+                var existingCat = catQuery('');
+                if(!targetCat) existingCat = new category();
+                for(var i of targetCat.contacts) existingCat.contacts.push(i);
+                existingCat.refreshContacts();
+            }
+            //Obliterate EVERYTHING
+            else for(var i of targetCat.contacts) i.dereference();
+
+            editorField.removeChild(targetCat.inDom);
+            previewField.removeChild(targetCat.outDom);
+            //Remove from internal addressing:
+            delete categories[targetCat.catId];
+        }
+    }
+
 }

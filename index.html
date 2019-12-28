@@ -2,17 +2,20 @@
 <html>
     <head>
         <style>
-        .categoryDiv:hover .newContactBtn{
+        .categoryDiv:hover .newContactBtn,
+        .contactDiv:hover .conDelBtn,
+        .categoryDiv:hover .delCatBtn{
             visibility: visible;
         }
-        .categoryDiv .newContactBtn{
+        .categoryDiv .newContactBtn,
+        .contactDiv .conDelBtn,
+        .categoryDiv .delCatBtn{
             visibility: hidden;
         }
-        .contactDiv:hover .conDelBtn{
-            visibility: visible;
-        }
-        .contactDiv .conDelBtn{
-            visibility: hidden;
+
+        #previewField{
+            border-top:2px dashed skyblue;
+            margin-top:10px
         }
         </style>
     </head>
@@ -20,6 +23,10 @@
         <input type='file' id='contactListIn'><button onclick='confirm("Start over from scratch? Everything will need to be re-assembled!")?clearEverything():0'>Clear Phonebook</button>
 
         <div id='editorField'></div>
+        <div id='newCatInterface'>
+            <span style='display:none'><input placeholder="Category Name"/><input placeholder="Font"/><input type='color' placeholder="Color"/><button onclick="domInterface.addCatBtn(this)">Add!</button></span>
+            <button onclick='domInterface.newCatToggle(this)'>Add New Category</button>
+        </div>
         <div id="previewField"></div>
 
         <script src="objects.js"></script>
@@ -40,13 +47,11 @@
                         parseContactFile(e.srcElement.result);
                         loadedContacts++;
                         if(loadedContacts == newContacts){
-                            //Everything loaded, let's display it!
-                            for(var i in categories){
-                                if(typeof categories[i] == 'object'){
-                                    // console.log(categories[i],i);
-                                    editorField.appendChild(categories[i].inDom);
-                                    previewField.appendChild(categories[i].outDom);
-                                }
+                            //Everything's loaded, let's display it!
+                            for(var i of domInterface.sortCategories()){
+                                // console.log(categories[i],i);
+                                editorField.appendChild(i.inDom);
+                                previewField.appendChild(i.outDom);
                             }
                         }
                     }
@@ -94,20 +99,56 @@
             
             //Quick and dirty method to find a category of the same name. Not super perfect... since names can be disassociated with their id's, but fair enough for it's purpose.
             function catQuery(name=''){
-                var keys = Object.keys(categories).filter(e=>e[0] == name[0]);
+                //The isNaN part here is for detecting names with a blank address (numerical indexes)
+                var keys = Object.keys(categories).filter(e=>(e[0] == name[0]) || !isNaN(e) && name === '');
                 for(var i in keys)
-                    if(typeof(categories[keys[i]]) == 'object' && categories[keys[i]].name == name) return categories[keys[i]];
+                    if(typeof(categories[keys[i]]) == 'object' && categories[keys[i]].name === name) return categories[keys[i]];
+            }
+            
+            var domInterface = {
+                //Oh snap, you clicked THAT button! :O CHAOS IS UPON US!! (nooooo)
+                clearEverything: function(){
+                    editorField.innerHTML = previewField.innerHTML = '';
+                    newContacts = loadedContacts = 0;
+                    contactList = [];
+                    categories = {}, contactObjects = {};
+                    contactListIn.value = '';
+                    //I guess it was just a dream... see you, Ness!
+                },
+                //Grab all category keys and sort by name
+                sortCategories: ()=>Object.values(categories).filter(e=>typeof e == 'object').sort((e,f)=>e.name > f.name?1:-1),
+                newCatToggle:e=>{
+                    //Check to see if the container is hidden
+                    var container = e.parentElement.children[0];
+                    var addCancel = container.style.display == 'none';
+                    e.innerHTML = addCancel?'Cancel':'Add New Category';
+                    container.style.display = addCancel?'':'none';
+                },
+                addCatBtn:e=>{
+                    //Collect information from dom.
+                    var containerInputs = e.parentElement.getElementsByTagName('input');
+                    var inputData = [];
+                    //Clean up the dom for next use and close the interface
+                    for(var i of containerInputs){
+                        inputData.push(i.value);
+                        i.value = i.type == 'color'?'#000000':'';
+                    }
+                    domInterface.newCatToggle(newCatInterface.children[1]);
+                    //Actually add the button:
+                    domInterface.addNewCategory(...inputData);
+                },
+                addNewCategory:function(name,color,font){
+                    var addedCat = new category(...arguments);
+                    editorField.innerHTML = previewField.innerHTML = '';
+                    for(var i of domInterface.sortCategories()){
+                        editorField.appendChild(i.inDom);
+                        previewField.appendChild(i.outDom);
+                    }
+                }
+
             }
 
-            //Oh snap, you clicked THAT button! :O CHAOS IS UPON US!! (nooooo)
-            function clearEverything(){
-                editorField.innerHTML = previewField.innerHTML = '';
-                newContacts = loadedContacts = 0;
-                contactList = [];
-                categories = {}, contactObjects = {};
-                contactListIn.value = '';
-                //I guess it was just a dream... see you, Ness!
-            }
+            domInterface.addNewCategory();
         </script>
     </body>
 </html>
