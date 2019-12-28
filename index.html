@@ -20,7 +20,7 @@
         </style>
     </head>
     <body>
-        <input type='file' id='contactListIn'><button onclick='confirm("Start over from scratch? Everything will need to be re-assembled!")?clearEverything():0'>Clear Phonebook</button>
+        <input type='file' id='contactListIn'><button onclick='confirm("Start over from scratch? Everything will need to be re-assembled!")?domInterface.clearEverything():0'>Clear Phonebook</button>
 
         <div id='editorField'></div>
         <div id='newCatInterface'>
@@ -113,6 +113,7 @@
                     contactList = [];
                     categories = {}, contactObjects = {};
                     contactListIn.value = '';
+                    domInterface.addNewCategory();
                     //I guess it was just a dream... see you, Ness!
                 },
                 //Grab all category keys and sort by name
