@@ -1,6 +1,12 @@
+<!-- Made by Zachary Mitchell in 2019!
+Dedicated to my hair stylist Heather, as well as Magda.
+
+Make a printable phonebook! Categories and names are sorted automatically, complete with a preview below the editor.
+Nerds can manually edit a simple file-structure.-->
 <!DOCTYPE html>
 <html>
     <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
         .categoryDiv:hover .newContactBtn,
         .contactDiv:hover .conDelBtn,
@@ -17,13 +23,58 @@
             border-top:2px dashed skyblue;
             margin-top:10px
         }
+        .foregroundWindow{
+            position:absolute;
+            width:75%;
+            height:75%;
+            background-color:lightgray;
+            border-radius: 10px;
+            margin-left:12%;
+            margin-top:5%;
+            overflow:scroll;
+        }
+        .webOnlyFont{
+            color:royalblue;
+        }
+        </style>
+
+        <!-- Google fonts, you're my hero :') (fonts.google.com) -->
+        <style>
+            @import url('https://fonts.googleapis.com/css?family=Fredoka+One|Ma+Shan+Zheng|Pacifico|Gloria+Hallelujah|Alata&display=swap');
         </style>
     </head>
     <body>
-        <input type='file' id='contactListIn'>
-        <button onclick='confirm("Start over from scratch? Everything will need to be re-assembled!")?domInterface.clearEverything():0'>Clear Phonebook</button>
-        <button onclick="exportPhonebook()">Save Phonebook</button>
+        <h1 style='text-align:center'>Magda Phonebook</h1>
+        <!-- Div element that shows a font-selection and preview -->
+        <div class='foregroundWindow' id='fontSettings' style='display:none'>
+            <h1 style='text-align:center'>Font Select</h1>
+            <h2 id="fontPreview" style='text-align:center'>The quick brown fox jumps over the lazy dog (123) 456 - 7890</h2>
+            <p style='text-align:center'><button onclick="fontUI.applyFont()">Apply Font</button><button onclick="fontSettings.style.display='none'">Cancel</button></p>
+            <input type='checkbox' onchange='fontUI.toggleOptions(this)'>Advanced
+            <span class='basicOptions'>
+                <p>Select a font to use on the category.</p>
+                <select id='selectFontVal' onchange="fontUI.changePreview(this)">
+                    <option>Times New Roman</option>
+                    <option>Arial</option>
+                    <option>monospace</option>
+                    <option class='webOnlyFont'>Alata</option>
+                    <option class='webOnlyFont'>Fredoka One</option>
+                    <option class='webOnlyFont'>Gloria Hallelujah</option>
+                    <option class='webOnlyFont'>Ma Shan Zheng</option>
+                    <option class='webOnlyFont'>Pacifico</option>
+                </select>
+                <p id='fontWebOnlyError' style='display:none;font-weight:bold'>Connect to the internet if this font isn't loading.</p>
+            </span>
+            <span class='advancedOptions' style='display:none'>
+                <p>Type in the name of a font that you have on your device. Must be exact spelling.<br><i>Note: This font may not work on all devices.</i></p>
+                <input id='advFontVal' onchange="fontUI.changePreview(this)"/>
+            </span>
+
+        </div>
+        <input type='file' id='contactListIn'><br>
         <button onclick="printPhonebook()">Print</button>
+        <button onclick="exportPhonebook()">Save Phonebook</button>
+        <button onclick='confirm("Start over from scratch? Everything will need to be re-assembled!")?domInterface.clearEverything():0'>Clear Phonebook</button>
 
         <div id='editorField'></div>
         <div id='newCatInterface'>
@@ -139,15 +190,17 @@
                     @media print{
                         .oCategoryDiv{page-break-after: always;}
                     }
-                </style>`;
+                </style>
+                <style>@import url('https://fonts.googleapis.com/css?family=Fredoka+One|Ma+Shan+Zheng|Pacifico|Gloria+Hallelujah|Alata&display=swap');</style>`;
 
                 printWindow.document.head.innerHTML+=css;
-                for(var i of catList){
-                    printWindow.document.body.innerHTML+=i.outDom.outerHTML;
-                    if(i != catList[catList.length-1]) printWindow.document.body.innerHTML+='<span class="newPage"></span>'
-                }
+                for(var i of catList)
+                    //Avoid printing the blank category if nothing's there
+                    if(i.name!='' || i.contacts.length)
+                        printWindow.document.body.innerHTML+=i.outDom.outerHTML;
+
                 printWindow.window.print();
-                printWindow.window.close();
+                // printWindow.window.close();
             }
             
             var domInterface = {
@@ -183,15 +236,62 @@
                     //Actually add the button:
                     domInterface.addNewCategory(...inputData);
                 },
-                addNewCategory:function(name,color,font){
+                addNewCategory:function(name='',color='',font=''){
                     var addedCat = new category(...arguments);
                     editorField.innerHTML = previewField.innerHTML = '';
                     for(var i of domInterface.sortCategories()){
                         editorField.appendChild(i.inDom);
                         previewField.appendChild(i.outDom);
                     }
+                    return addedCat;
                 }
 
+            }
+
+            //Main location to control the font interface. I have quite a few font's memorized, but obviously not everyone does.
+            var fontUI = {
+                targetFontOption:false,
+                categoryToChange:undefined,
+                fontValue:'',
+                toggleOptions:function(src){
+                    fontUI.targetFontOption = src.checked;
+                    fontSettings.getElementsByClassName('basicOptions')[0].style.display=src.checked?'none':'';
+                    fontSettings.getElementsByClassName('advancedOptions')[0].style.display=!src.checked?'none':'';
+
+                    //Change preview to reflect user-input:
+                    fontUI.changePreview(src.checked?fontSettings.getElementsByTagName('input')[1]:fontSettings.getElementsByTagName('select')[0]);
+                },
+
+                //Depending on the option setting (basic/advanced), the preview will apply the correct font. Afterwards the correct font is stored in fontUI.
+                changePreview(src){
+                    var targetOption = fontUI.targetFontOption? src.value:src.children[src.selectedIndex].innerHTML;
+                    fontPreview.style.fontFamily=targetOption;
+                    fontUI.fontValue = targetOption;
+
+                    //Basic settings only
+                    if(!fontUI.targetFontOption)
+                        fontWebOnlyError.style.display = src.children[src.selectedIndex].className == 'webOnlyFont'?'':'none';
+                },
+                applyFont:function(){
+                    if(!fontUI.categoryToChange)console.warn('Heheh; nice try sir script-kiddie ;P');
+                    else{
+                        fontUI.categoryToChange.setAttribute('font',fontUI.fontValue);
+                        //Poof! It's gone
+                        fontSettings.style.display='none';
+                    }
+                },
+                //Reset ui for next use:
+                resetUI:function(){
+                    fontSettings.getElementsByTagName('select')[0].selectedIndex = 0;
+                    var inputElements = fontSettings.getElementsByTagName('input');
+                    //checkbox
+                    inputElements[0].checked = false;
+                    fontUI.targetFontOption = false;
+                    fontUI.toggleOptions(inputElements[0]);
+                    //Text field
+                    inputElements[1].value='';
+                    fontUI.categoryToChange = undefined;
+                }
             }
 
             domInterface.addNewCategory();

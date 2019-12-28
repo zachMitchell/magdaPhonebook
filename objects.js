@@ -38,7 +38,7 @@ function contact(fname='',lname='',number=''){
             //Since there's allot of things to filter out, parsing will be manual here:
             for(var i = 0;i<value.length;i++){
                 //If this is a phone number, take out anything that's not a number
-                if(target!='number' || target == 'number' && !isNaN(value[i]))
+                if(target!='number' || target == 'number' && !isNaN(value[i]) && value[i]!== ' ')
                     if( (i>0 && value[i]!=',') || (i == 0 && '|),'.indexOf(value[i]) ==-1)) //Remove custom file-type syntax if that slips in.
                         finalVal+=value[i];
             }
@@ -125,7 +125,7 @@ function category(name='',font='',color='#000000'){
     this.inDom = document.createElement('div');
     this.inDom.className = 'categoryDiv';
     //the div tag on the end of this next variable is where the list of contacts will go (or at least their associated DOM element.)
-    this.inDom.innerHTML = '<span class="catContainer"><input class="catName" placeholder="Category name"><input placeholder="Font" class="catFont"></input><input type="color" class="catColor" placeholder="Text color"></span><button class="delCatBtn">X</button><div class="catContacts"></div><button class="newContactBtn" onclick="this.parentElement.getElementsByClassName(\'addContactInterface\')[0].style.display=\'\'">Add new contact</button>';
+    this.inDom.innerHTML = '<span class="catContainer"><input class="catName" placeholder="Category name"><input placeholder="Font" class="catFont" readonly></input><input type="color" class="catColor" placeholder="Text color"></span><button class="delCatBtn">X</button><div class="catContacts"></div><button class="newContactBtn" onclick="this.parentElement.getElementsByClassName(\'addContactInterface\')[0].style.display=\'\'">Add new contact</button>';
     this.outDom = document.createElement('div');
     this.outDom.innerHTML = '<h1 class="catHeader"></h1><div class="outCatContacts"></div>';
     this.outDom.className = 'oCategoryDiv';
@@ -245,7 +245,7 @@ function category(name='',font='',color='#000000'){
             if(keepContacts){
                 //Find the blank category; if it doesn't exist make it:
                 var existingCat = catQuery('');
-                if(!targetCat) existingCat = new category();
+                if(!existingCat) existingCat = domInterface.addNewCategory();
                 for(var i of targetCat.contacts) existingCat.contacts.push(i);
                 existingCat.refreshContacts();
             }
@@ -257,6 +257,13 @@ function category(name='',font='',color='#000000'){
             //Remove from internal addressing:
             delete categories[targetCat.catId];
         }
+    }
+
+    //Font event listener:
+    this.inDom.getElementsByClassName('catFont')[0].onclick=function(){
+        fontUI.resetUI();
+        fontUI.categoryToChange=categories[this.parentElement.parentElement.dataset.catId];
+        fontSettings.style.display='';
     }
 
 }
