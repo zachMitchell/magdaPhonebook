@@ -20,7 +20,10 @@
         </style>
     </head>
     <body>
-        <input type='file' id='contactListIn'><button onclick='confirm("Start over from scratch? Everything will need to be re-assembled!")?domInterface.clearEverything():0'>Clear Phonebook</button>
+        <input type='file' id='contactListIn'>
+        <button onclick='confirm("Start over from scratch? Everything will need to be re-assembled!")?domInterface.clearEverything():0'>Clear Phonebook</button>
+        <button onclick="exportPhonebook()">Save Phonebook</button>
+        <button onclick="printPhonebook()">Print</button>
 
         <div id='editorField'></div>
         <div id='newCatInterface'>
@@ -103,6 +106,48 @@
                 var keys = Object.keys(categories).filter(e=>(e[0] == name[0]) || !isNaN(e) && name === '');
                 for(var i in keys)
                     if(typeof(categories[keys[i]]) == 'object' && categories[keys[i]].name === name) return categories[keys[i]];
+            }
+
+            function catToCustomFile(categoryIn){
+                var outStr = ')'+categoryIn.name + ','+categoryIn.font+','+categoryIn.color;
+                for(var i of categoryIn.contacts) outStr+='\n'+i.fname+','+i.lname+','+i.number;
+                return outStr;
+            }
+
+            //Save the configuration as a file!
+            function exportPhonebook(){
+                var catList = domInterface.sortCategories();
+                var dataStream = []; //this will go into a downloadable blob later.
+                for(var i = 0;i<catList.length;i++){
+                    dataStream.push(catToCustomFile(catList[i]));
+                    if(i < catList.length-1) dataStream[i]+='\n';
+                }
+
+                //Make the blob out of the data above:
+                var phonebookBlob = new Blob(dataStream);
+                var downloadLink = document.createElement('a');
+                downloadLink.download = 'newPhonebook.txt';
+                downloadLink.href = URL.createObjectURL(phonebookBlob);
+                downloadLink.click();
+            }
+
+            function printPhonebook(){
+                var catList = domInterface.sortCategories();
+                var printWindow = open();
+                //Wow, thanks w3schools :D https://www.w3schools.com/cssref/pr_print_pageba.asp
+                var css = `<style>
+                    @media print{
+                        .oCategoryDiv{page-break-after: always;}
+                    }
+                </style>`;
+
+                printWindow.document.head.innerHTML+=css;
+                for(var i of catList){
+                    printWindow.document.body.innerHTML+=i.outDom.outerHTML;
+                    if(i != catList[catList.length-1]) printWindow.document.body.innerHTML+='<span class="newPage"></span>'
+                }
+                printWindow.window.print();
+                printWindow.window.close();
             }
             
             var domInterface = {

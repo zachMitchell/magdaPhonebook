@@ -128,6 +128,7 @@ function category(name='',font='',color='#000000'){
     this.inDom.innerHTML = '<span class="catContainer"><input class="catName" placeholder="Category name"><input placeholder="Font" class="catFont"></input><input type="color" class="catColor" placeholder="Text color"></span><button class="delCatBtn">X</button><div class="catContacts"></div><button class="newContactBtn" onclick="this.parentElement.getElementsByClassName(\'addContactInterface\')[0].style.display=\'\'">Add new contact</button>';
     this.outDom = document.createElement('div');
     this.outDom.innerHTML = '<h1 class="catHeader"></h1><div class="outCatContacts"></div>';
+    this.outDom.className = 'oCategoryDiv';
     this.setAttribute = function(target,value){
         if(['name','color','font'].indexOf(target) > -1 && value!==undefined){
             value = ''+value;
