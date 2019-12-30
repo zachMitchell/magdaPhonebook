@@ -78,7 +78,7 @@ Nerds can manually edit a simple file-structure.-->
 
         <div id='editorField'></div>
         <div id='newCatInterface'>
-            <span style='display:none'><input placeholder="Category Name"/><input placeholder="Font"/><input type='color' placeholder="Color"/><button onclick="domInterface.addCatBtn(this)">Add!</button></span>
+            <span style='display:none'><input placeholder="Category Name"/><input placeholder="Font" readonly onclick="fontUI.resetUI();fontUI.categoryToChange = this;fontSettings.style.display='';"/><input type='color' placeholder="Color"/><button onclick="domInterface.addCatBtn(this)">Add!</button></span>
             <button onclick='domInterface.newCatToggle(this)'>Add New Category</button>
         </div>
         <div id="previewField"></div>
@@ -275,7 +275,10 @@ Nerds can manually edit a simple file-structure.-->
                 applyFont:function(){
                     if(!fontUI.categoryToChange)console.warn('Heheh; nice try sir script-kiddie ;P');
                     else{
-                        fontUI.categoryToChange.setAttribute('font',fontUI.fontValue);
+                        //If this is just an input element, simply insert the value.
+                        if(fontUI.categoryToChange.tagName=='INPUT') fontUI.categoryToChange.value = fontUI.fontValue;
+                        //A category object; life is easy with this, just run it and changes ripple down :)
+                        else fontUI.categoryToChange.setAttribute('font',fontUI.fontValue);
                         //Poof! It's gone
                         fontSettings.style.display='none';
                     }
