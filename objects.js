@@ -24,7 +24,7 @@ function contact(fname='',lname='',number=''){
     //Initialize dom elements:
     this.inDom = document.createElement('div');
     this.inDom.className = 'contactDiv';
-    this.inDom.innerHTML='<input placeholder="First Name" class="fname"><input placeholder="Last Name" class="lname"><input placeholder="Phone Number" class="number"> <button class="conDelBtn">X</button> <br>';
+    this.inDom.innerHTML='<input type="checkbox" class="conCheck"/><input placeholder="First Name" class="fname"><input placeholder="Last Name" class="lname"><input placeholder="Phone Number" class="number"> <button class="conDelBtn">X</button> <br>';
     this.outDom = document.createElement('div');
     this.outDom.innerHTML = '<h2><span class="ofname"></span> <span class="olname"></span></h2><h3 class="onumber"></h3><br>';
 
@@ -87,7 +87,7 @@ function contact(fname='',lname='',number=''){
     //(inDom) Add event listeners and contact object ID:
     this.inDom.dataset.contactObjId = this.contactObjId;
     for(var i of this.inDom.getElementsByTagName('input')){
-        i.onchange = function(){
+        if(i.type!='checkbox') i.onchange = function(){
             contactObjects[this.parentElement.dataset.contactObjId].setAttribute(this.className,this.value);
         }
     }

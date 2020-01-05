@@ -36,6 +36,20 @@ Nerds can manually edit a simple file-structure.-->
         .webOnlyFont{
             color:royalblue;
         }
+
+        .conCheck{
+            display:none;
+        }
+
+        #editorField.selectCheck .conCheck{
+            display:unset;
+        }
+
+        #editorField.selectCat .categoryDiv:hover{
+            border:5px dashed blue;
+            border-radius: 15px;
+        }
+
         </style>
 
         <!-- Google fonts, you're my hero :') (fonts.google.com) -->
@@ -45,6 +59,7 @@ Nerds can manually edit a simple file-structure.-->
     </head>
     <body>
         <h1 style='text-align:center'>Magda Phonebook</h1>
+        <h2 id="moveInstructions" style='text-align:center;display:none'>Select the category you want to move the contacts to <button onclick="moveContactsEnd();">Cancel</button></h2>
         <!-- Div element that shows a font-selection and preview -->
         <div class='foregroundWindow' id='fontSettings' style='display:none'>
             <h1 style='text-align:center'>Font Select</h1>
@@ -75,6 +90,12 @@ Nerds can manually edit a simple file-structure.-->
         <button onclick="printPhonebook()">Print</button>
         <button onclick="exportPhonebook()">Save Phonebook</button>
         <button onclick='confirm("Start over from scratch? Everything will need to be re-assembled!")?domInterface.clearEverything():0'>Clear Phonebook</button>
+
+        <button id='selectContactsBtn'>Select Contacts</button>
+        <span class='selectBtnContainer' style='display:none;margin-left:10px'>
+            <button id='moveContactsBtn'>Move...</button>
+            <button id='deleteContactsBtn'>Delete Selected</button>
+        </span>
 
         <div id='editorField'></div>
         <div id='newCatInterface'>
@@ -244,9 +265,78 @@ Nerds can manually edit a simple file-structure.-->
                         previewField.appendChild(i.outDom);
                     }
                     return addedCat;
+                },
+                moveContactsToNewCategory(contactList,newCategory){
+                    //Based on the contact's source category, collect categories and refresh each one after the move
+                    var catMap = new Map();
+                    for(var i of contactList){
+                        var rootCategory = categories[i.inDom.parentElement.parentElement.dataset.catId];
+                        if(!catMap.get(rootCategory)) catMap.set(rootCategory,true);
+
+                        delete rootCategory.contacts[rootCategory.contacts.indexOf(i)];
+                    }
+                    //Refresh category contacts list
+                    for(var i of catMap.keys()) i.refreshContacts();
+
+                    //Add new contacts to category:
+                    newCategory.contacts.push(...contactList);
+                    newCategory.refreshContacts();
+                },
+                getContactsFromCheckmarks:function(){
+                    var contactList = [];
+                    for(var i of document.getElementsByClassName('conCheck')){
+                        if(i.checked) contactList.push(contactObjects[i.parentElement.dataset.contactObjId]);
+                    }
+                    return contactList;
                 }
 
             }
+
+            //Select from all contacts on the page to do something like deletion or moving them around.
+            selectContactsBtn.onclick=function(){
+                var hideCheckboxes = this.innerHTML == 'Cancel';
+                editorField.classList[hideCheckboxes?'remove':'add']('selectCheck');
+
+                if(hideCheckboxes)
+                    for(var i of document.getElementsByClassName('conCheck')) i.checked = false;
+
+                document.getElementsByClassName('selectBtnContainer')[0].style.display = hideCheckboxes?'none':'';
+                this.innerHTML = hideCheckboxes? 'Select Contacts':'Cancel';
+            }
+
+            deleteContactsBtn.onclick = function(){
+                if(confirm('Delete everything that was just selected?')){
+                    for(var i of domInterface.getContactsFromCheckmarks())
+                        i.dereference();
+                }
+            }
+
+            moveContactsBtn.onclick = function(){
+                moveInstructions.style.display = '';
+                document.getElementsByClassName('selectBtnContainer')[0].style.display = 'none';
+                editorField.classList.add('selectCat');
+                selectContactsBtn.style.display = 'none';
+                document.body.addEventListener('click',moveContactsBodyListener);
+            }
+
+            var moveContactsBodyListener = function(mouseEvent){
+                for(var i of mouseEvent.path){
+                    if(i.className == 'categoryDiv'){
+                        var targetCategory = categories[i.dataset.catId];
+                        domInterface.moveContactsToNewCategory(domInterface.getContactsFromCheckmarks(),targetCategory);
+                        moveContactsEnd();
+                        document.body.removeEventListener('click',moveContactsBodyListener);
+                    }
+                }
+            }
+
+            var moveContactsEnd = function(){
+                editorField.classList.remove('selectCat');
+                moveInstructions.style.display = 'none';
+                selectContactsBtn.style.display = '';
+                selectContactsBtn.click();
+            }
+
 
             //Main location to control the font interface. I have quite a few font's memorized, but obviously not everyone does.
             var fontUI = {
