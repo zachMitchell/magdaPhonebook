@@ -29,6 +29,6 @@ One more thing you should note: this file structure is basically a **csv** file.
 ## To-do list:
 
 * Read iOS Contacts (vcf)
-* Move contacts to other categories
-* Delete Multiple contacts & categories at the same time
+* ~~Move contacts to other categories~~
+* ~~Delete Multiple contacts & categories at the same time~~
 * Make the page relaxing to look at
