@@ -164,7 +164,7 @@ function category(name='',font='',color='#000000'){
             var sortBy = (firstLast?'f':'l')+'name';
             //Rid the array of anything other then objects (basically make a new array):
             var popIndex = 0;
-            this.contacts = this.contacts.filter(e=>typeof e == 'object').sort((e,f)=>e[sortBy] > f[sortBy]?1:-1);
+            this.contacts = this.contacts.filter(e=>typeof e == 'object').sort((e,f)=>e[sortBy].toLowerCase() > f[sortBy].toLowerCase()?1:-1);
 
             //print elements to the respective dom elements:
             for(var i of this.contacts){

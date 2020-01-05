@@ -236,7 +236,7 @@ Nerds can manually edit a simple file-structure.-->
                     //I guess it was just a dream... see you, Ness!
                 },
                 //Grab all category keys and sort by name
-                sortCategories: ()=>Object.values(categories).filter(e=>typeof e == 'object').sort((e,f)=>e.name > f.name?1:-1),
+                sortCategories: ()=>Object.values(categories).filter(e=>typeof e == 'object').sort((e,f)=>e.name.toLowerCase() > f.name.toLowerCase()?1:-1),
                 newCatToggle:e=>{
                     //Check to see if the container is hidden
                     var container = e.parentElement.children[0];
