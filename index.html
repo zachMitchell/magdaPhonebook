@@ -320,13 +320,16 @@ Nerds can manually edit a simple file-structure.-->
             }
 
             var moveContactsBodyListener = function(mouseEvent){
-                for(var i of mouseEvent.path){
-                    if(i.className == 'categoryDiv'){
-                        var targetCategory = categories[i.dataset.catId];
+                var currElementTraceback = mouseEvent.target;
+                while(currElementTraceback.tagName!='BODY'){
+                    if(currElementTraceback.className == 'categoryDiv'){
+                        var targetCategory = categories[currElementTraceback.dataset.catId];
                         domInterface.moveContactsToNewCategory(domInterface.getContactsFromCheckmarks(),targetCategory);
                         moveContactsEnd();
                         document.body.removeEventListener('click',moveContactsBodyListener);
+                        break;
                     }
+                    currElementTraceback = currElementTraceback.parentElement;
                 }
             }
 
